@@ -1,0 +1,44 @@
+#include <stdio.h>
+#include <string.h>
+#include <stdint.h>
+
+#define BLOCK_SIZE 8
+
+// Dummy DES encryption (replace with actual DES implementation)
+void des_encrypt(const uint8_t input[BLOCK_SIZE], uint8_t output[BLOCK_SIZE], const uint8_t key[8]) {
+    memcpy(output, input, BLOCK_SIZE);  // Placeholder (copy input to output)
+}
+
+// ECB mode encryption
+void ecb_encrypt(const uint8_t *plaintext, size_t len, uint8_t *ciphertext, const uint8_t key[8]) {
+    uint8_t block[BLOCK_SIZE];
+    size_t num_blocks = (len + BLOCK_SIZE - 1) / BLOCK_SIZE;
+
+    for (size_t i = 0; i < num_blocks; i++) {
+        memset(block, 0, BLOCK_SIZE);
+        size_t to_copy = (len - i * BLOCK_SIZE < BLOCK_SIZE) ? len - i * BLOCK_SIZE : BLOCK_SIZE;
+        memcpy(block, plaintext + i * BLOCK_SIZE, to_copy);
+        des_encrypt(block, ciphertext + i * BLOCK_SIZE, key);
+    }
+}
+
+int main() {
+    const uint8_t key[8] = {0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef};
+    const uint8_t plaintext[] = "Hello, World!";  // Example plaintext
+    size_t plaintext_len = strlen((const char *)plaintext);
+    uint8_t ciphertext[BLOCK_SIZE * 3] = {0};  // Adjust size as needed
+
+    ecb_encrypt(plaintext, plaintext_len, ciphertext, key);
+
+    printf("Ciphertext: ");
+    for (size_t i = 0; i < plaintext_len + BLOCK_SIZE; i++) {
+        printf("%02x", ciphertext[i]);
+    }
+    printf("\n");
+
+    return 0;
+}
+
+
+#OUTPUT
+Ciphertext: 48656c6c6f2c20576f726c64210000000000000000
