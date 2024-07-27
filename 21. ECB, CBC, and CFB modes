@@ -1,0 +1,85 @@
+#include <stdio.h>
+#include <string.h>
+#include <stdint.h>
+
+#define BLOCK_SIZE 16
+
+void xor_block(uint8_t *block, uint8_t *key) {
+    for (int i = 0; i < BLOCK_SIZE; i++) {
+        block[i] ^= key[i];
+    }
+}
+
+void pad_and_encrypt(uint8_t *data, size_t *length, uint8_t *key, uint8_t *iv, int mode) {
+    size_t orig_len = *length;
+    size_t padding_length = (BLOCK_SIZE - (*length % BLOCK_SIZE)) % BLOCK_SIZE;
+    if (padding_length) {
+        data[*length] = 0x80;
+        memset(data + *length + 1, 0, padding_length - 1);
+        *length += padding_length;
+    }
+
+    uint8_t block[BLOCK_SIZE];
+    memcpy(block, iv, BLOCK_SIZE);
+
+    for (size_t i = 0; i < *length; i += BLOCK_SIZE) {
+        if (mode == 1) { // ECB
+            xor_block(data + i, key);
+        } else if (mode == 2) { // CBC
+            for (int j = 0; j < BLOCK_SIZE; j++) {
+                block[j] ^= data[i + j];
+            }
+            xor_block(block, key);
+            memcpy(data + i, block, BLOCK_SIZE);
+            memcpy(block, data + i, BLOCK_SIZE);
+        } else if (mode == 3) { // CFB
+            xor_block(block, key);
+            for (int j = 0; j < BLOCK_SIZE && i + j < *length; j++) {
+                data[i + j] ^= block[j];
+            }
+            memcpy(block, data + i, BLOCK_SIZE);
+        }
+    }
+}
+
+void print_data(const char *label, uint8_t *data, size_t length) {
+    printf("%s: ", label);
+    for (size_t i = 0; i < length; i++) {
+        printf("%02x ", data[i]);
+    }
+    printf("\n");
+}
+
+int main() {
+    uint8_t key[BLOCK_SIZE] = {0};
+    uint8_t iv[BLOCK_SIZE] = {1};
+    uint8_t data[BLOCK_SIZE * 2] = "Hello World!123";
+
+    size_t length = strlen((char *)data);
+
+    uint8_t ecb_data[BLOCK_SIZE * 2];
+    memcpy(ecb_data, data, length);
+    pad_and_encrypt(ecb_data, &length, key, iv, 1);
+    print_data("ECB Encrypted", ecb_data, length);
+
+    size_t length_cbc = length;
+    uint8_t cbc_data[BLOCK_SIZE * 2];
+    memcpy(cbc_data, data, length);
+    pad_and_encrypt(cbc_data, &length_cbc, key, iv, 2);
+    print_data("CBC Encrypted", cbc_data, length_cbc);
+
+    size_t length_cfb = length;
+    uint8_t cfb_data[BLOCK_SIZE * 2];
+    memcpy(cfb_data, data, length);
+    pad_and_encrypt(cfb_data, &length_cfb, key, iv, 3);
+    print_data("CFB Encrypted", cfb_data, length_cfb);
+
+    return 0;
+}
+
+
+
+#OUTPUT
+ECB Encrypted: 48 65 6c 6c 6f 20 57 6f 72 6c 64 21 31 32 33 80
+CBC Encrypted: 49 65 6c 6c 6f 20 57 6f 72 6c 64 21 31 32 33 00
+CFB Encrypted: 49 65 6c 6c 6f 20 57 6f 72 6c 64 21 31 32 33 00
