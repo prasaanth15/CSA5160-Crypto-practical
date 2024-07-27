@@ -1,0 +1,74 @@
+#include <stdio.h>
+
+int main() {
+    // Example RSA parameters (small primes for simplicity)
+    long long n = 3233; // Modulus (n = p * q)
+    long long e = 17;   // Public exponent
+    long long d = 2753; // Private exponent (modular inverse of e modulo phi(n))
+
+    // Example plaintext characters (A=0, B=1, C=2)
+    char plaintext_chars[] = {'A', 'B', 'C'};
+    int plaintext_integers[3];
+    long long ciphertext[3];
+    long long decrypted_int;
+    char decrypted_char;
+
+    // Convert characters to integers (A=0, B=1, C=2)
+    for (int i = 0; i < 3; ++i) {
+        plaintext_integers[i] = plaintext_chars[i] - 'A';
+    }
+
+    // Encrypt each integer
+    printf("Encrypted characters:\n");
+    for (int i = 0; i < 3; ++i) {
+        long long base = plaintext_integers[i];
+        long long exp = e;
+        long long mod = n;
+        long long result = 1;
+
+        // Modular exponentiation (base^exp) % mod
+        while (exp > 0) {
+            if (exp % 2 == 1) {
+                result = (result * base) % mod;
+            }
+            base = (base * base) % mod;
+            exp = exp / 2;
+        }
+        ciphertext[i] = result;
+        printf("Encrypted %c: %lld\n", plaintext_chars[i], ciphertext[i]);
+    }
+
+    // Decrypt each ciphertext
+    printf("Decrypted characters:\n");
+    for (int i = 0; i < 3; ++i) {
+        long long base = ciphertext[i];
+        long long exp = d;
+        long long mod = n;
+        long long result = 1;
+
+        // Modular exponentiation (base^exp) % mod
+        while (exp > 0) {
+            if (exp % 2 == 1) {
+                result = (result * base) % mod;
+            }
+            base = (base * base) % mod;
+            exp = exp / 2;
+        }
+        decrypted_int = result;
+        decrypted_char = decrypted_int + 'A';
+        printf("Decrypted %lld: %c\n", ciphertext[i], decrypted_char);
+    }
+
+    return 0;
+}
+
+
+#output
+Encrypted characters:
+Encrypted A: 0
+Encrypted B: 1
+Encrypted C: 1752
+Decrypted characters:
+Decrypted 0: A
+Decrypted 1: B
+Decrypted 1752: C
