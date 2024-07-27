@@ -1,0 +1,63 @@
+#include <stdio.h>
+#include <stdint.h>
+#include <string.h>
+
+#define BLOCK_SIZE 8  // Smaller block size for simplicity
+
+// Simple toy encryption function (XOR with key)
+void toyEncrypt(uint8_t *block, const uint8_t *key) {
+    for (int i = 0; i < BLOCK_SIZE; i++) {
+        block[i] ^= key[i];
+    }
+}
+
+// Compute CBC-MAC
+void computeCBCMAC(const uint8_t *key, const uint8_t *message, uint8_t *mac) {
+    uint8_t block[BLOCK_SIZE];
+    memcpy(block, message, BLOCK_SIZE);
+    toyEncrypt(block, key); // Initial encryption
+    memcpy(mac, block, BLOCK_SIZE); // Final MAC
+}
+
+// Main function
+int main() {
+    uint8_t key[BLOCK_SIZE] = {0x1F, 0x2E, 0x3D, 0x4C, 0x5B, 0x6A, 0x7F, 0x8E};
+    uint8_t X[BLOCK_SIZE] = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07};
+    uint8_t T[BLOCK_SIZE], X_xor_T[BLOCK_SIZE];
+    uint8_t combined_message[2 * BLOCK_SIZE], mac[BLOCK_SIZE];
+
+    // Compute MAC for X
+    computeCBCMAC(key, X, T);
+
+    // Compute X XOR T
+    for (int i = 0; i < BLOCK_SIZE; i++) {
+        X_xor_T[i] = X[i] ^ T[i];
+    }
+
+    // Prepare the combined message
+    memcpy(combined_message, X, BLOCK_SIZE);
+    memcpy(combined_message + BLOCK_SIZE, X_xor_T, BLOCK_SIZE);
+
+    // Compute MAC for the combined message
+    computeCBCMAC(key, combined_message, mac);
+
+    // Print results
+    printf("MAC T: ");
+    for (int i = 0; i < BLOCK_SIZE; i++) printf("%02X ", T[i]);
+    printf("\n");
+
+    printf("X XOR T: ");
+    for (int i = 0; i < BLOCK_SIZE; i++) printf("%02X ", X_xor_T[i]);
+    printf("\n");
+
+    printf("MAC of Combined Message: ");
+    for (int i = 0; i < BLOCK_SIZE; i++) printf("%02X ", mac[i]);
+    printf("\n");
+
+    return 0;
+}
+
+#output
+MAC T: 1F 2F 3F 4F 5F 6F 79 89
+X XOR T: 1F 2E 3D 4C 5B 6A 7F 8E
+MAC of Combined Message: 1F 2F 3F 4F 5F 6F 79 89
