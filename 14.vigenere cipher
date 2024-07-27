@@ -1,0 +1,67 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define ALPHABET_SIZE 26
+
+// Function to encrypt plaintext using Vigenère cipher
+void vigenereEncrypt(char *plaintext, int *keyStream, char *ciphertext) {
+    int plaintextLen = strlen(plaintext);
+    for (int i = 0; i < plaintextLen; i++) {
+        if (plaintext[i] >= 'A' && plaintext[i] <= 'Z') {
+            ciphertext[i] = 'A' + (plaintext[i] - 'A' + keyStream[i]) % ALPHABET_SIZE;
+        } else {
+            ciphertext[i] = plaintext[i];  
+        }
+    }
+    ciphertext[plaintextLen] = '\0';
+}
+
+// Function to decrypt ciphertext using Vigenère cipher
+void vigenereDecrypt(char *ciphertext, int *keyStream, char *plaintext) {
+    int ciphertextLen = strlen(ciphertext);
+    for (int i = 0; i < ciphertextLen; i++) {
+        if (ciphertext[i] >= 'A' && ciphertext[i] <= 'Z') {
+            plaintext[i] = 'A' + (ciphertext[i] - 'A' - keyStream[i] + ALPHABET_SIZE) % ALPHABET_SIZE;
+        } else {
+            plaintext[i] = ciphertext[i];  
+        }
+    }
+    plaintext[ciphertextLen] = '\0';
+}
+
+int main() {
+    char plaintext[] = "SENDMOREMONEY";
+    int keyStream[] = {9, 0, 1, 7, 23, 15, 21, 14, 11, 11, 2, 8, 9};
+    char ciphertext[strlen(plaintext) + 1];
+    char decryptedText[strlen(plaintext) + 1];
+
+    // Encrypt the plaintext
+    vigenereEncrypt(plaintext, keyStream, ciphertext);
+    printf("Encrypted ciphertext: %s\n", ciphertext);
+
+    // Decrypt using target plaintext to find the key
+    char targetPlaintext[] = "CASHNOTNEEDED";
+    int key[strlen(ciphertext)];
+
+    for (int i = 0; i < strlen(ciphertext); i++) {
+        if (ciphertext[i] >= 'A' && ciphertext[i] <= 'Z') {
+            key[i] = (targetPlaintext[i] - ciphertext[i] + ALPHABET_SIZE) % ALPHABET_SIZE;
+        } else {
+            key[i] = 0; // Non-alphabet characters, no shift
+        }
+    }
+
+    // Decrypt the ciphertext using the found key
+    vigenereDecrypt(ciphertext, key, decryptedText);
+    printf("Decrypted plaintext using found key: %s\n", decryptedText);
+
+    return 0;
+}
+
+
+      
+      
+      #output
+      Encrypted ciphertext: BEOKJDMSXZPMH
+Decrypted plaintext using found key: AIKNFSFXQUBUL
