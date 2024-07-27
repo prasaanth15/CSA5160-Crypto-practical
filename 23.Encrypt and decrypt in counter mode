@@ -1,0 +1,80 @@
+#include <stdio.h>
+#include <stdint.h>
+#include <string.h>
+
+// Placeholder S-DES functions (you need to implement or include actual S-DES functions)
+void sdes_encrypt(uint8_t *block, uint8_t *key, uint8_t *ciphertext) {
+    // Simplified placeholder encryption function (not actual S-DES)
+    for (int i = 0; i < 8; ++i) {
+        ciphertext[i] = block[i] ^ key[i % 2];
+    }
+}
+
+void sdes_decrypt(uint8_t *block, uint8_t *key, uint8_t *plaintext) {
+    // Simplified placeholder decryption function (not actual S-DES)
+    for (int i = 0; i < 8; ++i) {
+        plaintext[i] = block[i] ^ key[i % 2];
+    }
+}
+
+// XOR operation
+void xor_block(uint8_t *in1, uint8_t *in2, uint8_t *out, int size) {
+    for (int i = 0; i < size; ++i) {
+        out[i] = in1[i] ^ in2[i];
+    }
+}
+
+// Encryption function in CTR mode
+void ctr_encrypt(uint8_t *plaintext, uint8_t *key, uint8_t *counter, uint8_t *ciphertext, int size) {
+    uint8_t keystream[8];
+    uint8_t block[8];
+    
+    for (int i = 0; i < size; i += 8) {
+        sdes_encrypt(counter, key, keystream);
+        xor_block(plaintext + i, keystream, ciphertext + i, 8);
+        
+        // Increment counter (this is a simple approach, you may need more complex handling for counter incrementation)
+        for (int j = 7; j >= 0; --j) {
+            if (++counter[j] != 0) break;
+        }
+    }
+}
+
+// Decryption function in CTR mode (same as encryption)
+void ctr_decrypt(uint8_t *ciphertext, uint8_t *key, uint8_t *counter, uint8_t *plaintext, int size) {
+    ctr_encrypt(ciphertext, key, counter, plaintext, size); // Decryption is same as encryption in CTR mode
+}
+
+int main() {
+    uint8_t key[8] = {0x1F, 0xFD}; // Example key   
+    uint8_t counter[8] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}; // Initialization Counter
+    uint8_t plaintext[8] = {0x01, 0x00, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00}; // Example plaintext
+    uint8_t ciphertext[8];
+    uint8_t decryptedtext[8];
+    
+    printf("Plaintext: ");
+    for (int i = 0; i < 8; ++i) printf("%02X ", plaintext[i]);
+    printf("\n");
+    
+    ctr_encrypt(plaintext, key, counter, ciphertext, 8);
+    
+    printf("Ciphertext: ");
+    for (int i = 0; i < 8; ++i) printf("%02X ", ciphertext[i]);
+    printf("\n");
+    
+    // Reset counter for decryption
+    memset(counter, 0, 8);
+    ctr_decrypt(ciphertext, key, counter, decryptedtext, 8);
+    
+    printf("Decryptedtext: ");
+    for (int i = 0; i < 8; ++i) printf("%02X ", decryptedtext[i]);
+    printf("\n");
+    
+    return 0;
+}
+
+
+#OUTPUT
+Plaintext: 01 00 20 00 00 00 00 00
+Ciphertext: 1E FD 3F FD 1F FD 1F FD
+Decryptedtext: 01 00 20 00 00 00 00 00
