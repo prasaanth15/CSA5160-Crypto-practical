@@ -1,0 +1,94 @@
+#include <stdio.h>
+#include <string.h>
+
+// Function to compute gcd of two integers
+int gcd(int a, int b) {
+    while (b) {
+        int temp = b;
+        b = a % b;
+        a = temp;
+    }
+    return a;
+}
+
+// Function to find modular inverse of a under modulo m
+int modInverse(int a, int m) {
+    a = a % m;
+    for (int x = 1; x < m; x++) {
+        if ((a * x) % m == 1) return x;
+    }
+    return -1;
+}
+
+// Function to encrypt plaintext using affine cipher
+void affineEncrypt(char *plaintext, int a, int b, char *ciphertext) {
+    int len = strlen(plaintext);
+    for (int i = 0; i < len; i++) {
+        if (plaintext[i] >= 'a' && plaintext[i] <= 'z') {
+            ciphertext[i] = ((a * (plaintext[i] - 'a') + b) % 26) + 'a';
+        } else if (plaintext[i] >= 'A' && plaintext[i] <= 'Z') {
+            ciphertext[i] = ((a * (plaintext[i] - 'A') + b) % 26) + 'A';
+        } else {
+            ciphertext[i] = plaintext[i];  // non-alphabetical characters are unchanged
+        }
+    }
+    ciphertext[len] = '\0';
+}
+
+// Function to decrypt ciphertext using affine cipher
+void affineDecrypt(char *ciphertext, int a, int b, char *plaintext) {
+    int len = strlen(ciphertext);
+    int a_inv = modInverse(a, 26);  // modular inverse of a
+    for (int i = 0; i < len; i++) {
+        if (ciphertext[i] >= 'a' && ciphertext[i] <= 'z') {
+            plaintext[i] = ((a_inv * (ciphertext[i] - 'a' - b + 26)) % 26) + 'a';
+        } else if (ciphertext[i] >= 'A' && ciphertext[i] <= 'Z') {
+            plaintext[i] = ((a_inv * (ciphertext[i] - 'A' - b + 26)) % 26) + 'A';
+        } else {
+            plaintext[i] = ciphertext[i];  // non-alphabetical characters are unchanged
+        }
+    }
+    plaintext[len] = '\0';
+}
+
+int main() {
+    char plaintext[100], ciphertext[100];
+    int a, b;
+
+    // Input plaintext, a and b
+    printf("Enter plaintext: ");
+    fgets(plaintext, sizeof(plaintext), stdin);
+    plaintext[strcspn(plaintext, "\n")] = '\0';  // Remove trailing newline
+
+    printf("Enter value of a (must be coprime with 26): ");
+    scanf("%d", &a);
+    if (gcd(a, 26) != 1) {
+        printf("Error: 'a' must be coprime with 26.\n");
+        return 1;
+    }
+
+    printf("Enter value of b: ");
+    scanf("%d", &b);
+
+    // Encrypt the plaintext
+    affineEncrypt(plaintext, a, b, ciphertext);
+    printf("Encrypted text: %s\n", ciphertext);
+
+    // Decrypt the ciphertext
+    affineDecrypt(ciphertext, a, b, plaintext);
+    printf("Decrypted text: %s\n", plaintext);
+
+    return 0;
+}
+
+
+
+
+
+#input
+Enter plaintext: helloworld
+Enter value of a (must be coprime with 26): 5
+Enter value of b: 8
+#output
+Encrypted text: rcllaoaplx
+Decrypted text: helloworld
