@@ -1,0 +1,105 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+#include <math.h>
+
+#define ALPHABET_SIZE 26
+#define TOP_N 10
+
+const double english_freq[ALPHABET_SIZE] = {
+    8.167, 1.492, 2.782, 4.253, 12.702, 2.228, 2.015, 6.094, 6.966, 0.153,
+    0.772, 4.025, 2.406, 6.749, 7.507, 1.929, 0.095, 5.987, 6.317, 9.056,
+    2.758, 0.978, 2.560, 0.150, 1.929, 0.074
+};
+
+void calculate_frequency(const char* text, double* freq) {
+    int count[ALPHABET_SIZE] = {0};
+    int total = 0;
+
+    for (int i = 0; text[i]; i++) {
+        if (isalpha(text[i])) {
+            count[tolower(text[i]) - 'a']++;
+            total++;
+        }
+    }
+
+    for (int i = 0; i < ALPHABET_SIZE; i++) {
+        freq[i] = total ? (double)count[i] / total * 100 : 0;
+    }
+}
+
+double calculate_similarity(const double* freq1, const double* freq2) {
+    double similarity = 0.0;
+    for (int i = 0; i < ALPHABET_SIZE; i++) {
+        similarity += fabs(freq1[i] - freq2[i]);
+    }
+    return similarity;
+}
+
+void decrypt(const char* ciphertext, const char* key, char* plaintext) {
+    for (int i = 0; ciphertext[i]; i++) {
+        plaintext[i] = isalpha(ciphertext[i]) ? key[ciphertext[i] - 'a'] : ciphertext[i];
+    }
+    plaintext[strlen(ciphertext)] = '\0';
+}
+
+void generate_key(char* key, int shift) {
+    for (int i = 0; i < ALPHABET_SIZE; i++) {
+        key[i] = 'a' + (i + shift) % ALPHABET_SIZE;
+    }
+    key[ALPHABET_SIZE] = '\0';
+}
+
+int main() {
+    char ciphertext[256], key[ALPHABET_SIZE + 1], plaintext[256];
+    double freq[ALPHABET_SIZE], similarity;
+    char* top_texts[TOP_N] = {NULL};
+    double top_similarities[TOP_N] = {INFINITY};
+
+    printf("Enter the ciphertext: ");
+    fgets(ciphertext, sizeof(ciphertext), stdin);
+    ciphertext[strcspn(ciphertext, "\n")] = '\0';
+
+    for (int i = 0; i < ALPHABET_SIZE; i++) {
+        generate_key(key, i);
+        decrypt(ciphertext, key, plaintext);
+        calculate_frequency(plaintext, freq);
+        similarity = calculate_similarity(freq, english_freq);
+
+        for (int j = 0; j < TOP_N; j++) {
+            if (similarity < top_similarities[j]) {
+                for (int k = TOP_N - 1; k > j; k--) {
+                    top_similarities[k] = top_similarities[k - 1];
+                    top_texts[k] = top_texts[k - 1];
+                }
+                top_similarities[j] = similarity;
+                top_texts[j] = strdup(plaintext);
+                break;
+            }
+        }
+    }
+
+    printf("Top %d possible plaintexts:\n", TOP_N);
+    for (int i = 0; i < TOP_N && top_texts[i]; i++) {
+        printf("%d. %s\n", i + 1, top_texts[i]);
+        free(top_texts[i]);
+    }
+
+    return 0;
+}
+
+
+#output
+Enter the ciphertext: happybirthday
+Top 10 possible plaintexts:
+1. slaajmtcesolj
+2. happybirthday
+3. lettcfmvxlhec
+4. atiirubkmawtr
+5. wpeenqxgiwspn
+6. ohwwfipyaokhf
+7. rkzzilsbdrnki
+8. ngvvehoxznjge
+9. exmmvyfoqeaxv
+10. unccloveguqnl
