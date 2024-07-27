@@ -1,0 +1,75 @@
+#include <stdio.h>
+#include <stdint.h>
+#include <stdbool.h>
+
+#define ROWS 5
+#define COLS 5
+
+// Function to print the matrix
+void printMatrix(uint64_t matrix[ROWS][COLS]) {
+    for (int i = 0; i < ROWS; i++) {
+        for (int j = 0; j < COLS; j++) {
+            printf("%016llx ", matrix[i][j]);
+        }
+        printf("\n");
+    }
+}
+
+// Function to check if all lanes in the capacity portion are nonzero
+bool allCapacityLanesNonZero(uint64_t matrix[ROWS][COLS]) {
+    for (int i = 0; i < ROWS; i++) {
+        for (int j = COLS / 2; j < COLS; j++) {
+            if (matrix[i][j] == 0) {
+                return false; // Found a zero lane in the capacity portion
+            }
+        }
+    }
+    return true; // All lanes in the capacity portion are nonzero
+}
+
+// Function to update the matrix (simple example)
+void updateMatrix(uint64_t matrix[ROWS][COLS], int step) {
+    // Update each element in the matrix in a different pattern
+    for (int i = 0; i < ROWS; i++) {
+        for (int j = 0; j < COLS; j++) {
+            matrix[i][j] ^= (1ULL << (step % 64)); // Toggle a specific bit in each element
+        }
+    }
+}
+
+int main() {
+    // Initialize the state matrix with all zeroes
+    uint64_t matrix[ROWS][COLS] = {0};
+
+    // Print the initial matrix
+    printf("Initial matrix:\n");
+    printMatrix(matrix);
+
+    // Perform updates and count the number of steps until all capacity lanes are nonzero
+    int steps = 0;
+    while (!allCapacityLanesNonZero(matrix)) {
+        updateMatrix(matrix, steps);
+        steps++;
+    }
+
+    // Print the final matrix and number of steps
+    printf("Final matrix after %d steps:\n", steps);
+    printMatrix(matrix);
+
+    return 0;
+}
+
+
+#output
+Initial matrix:
+0000000000000000 0000000000000000 0000000000000000 0000000000000000 0000000000000000
+0000000000000000 0000000000000000 0000000000000000 0000000000000000 0000000000000000
+0000000000000000 0000000000000000 0000000000000000 0000000000000000 0000000000000000
+0000000000000000 0000000000000000 0000000000000000 0000000000000000 0000000000000000
+0000000000000000 0000000000000000 0000000000000000 0000000000000000 0000000000000000
+Final matrix after 1 steps:
+0000000000000001 0000000000000001 0000000000000001 0000000000000001 0000000000000001
+0000000000000001 0000000000000001 0000000000000001 0000000000000001 0000000000000001
+0000000000000001 0000000000000001 0000000000000001 0000000000000001 0000000000000001
+0000000000000001 0000000000000001 0000000000000001 0000000000000001 0000000000000001
+0000000000000001 0000000000000001 0000000000000001 0000000000000001 0000000000000001
