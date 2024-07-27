@@ -1,0 +1,64 @@
+#include <stdio.h>
+#include <ctype.h>
+
+void encrypt(char *text, int k) {
+    for (int i = 0; text[i] != '\0'; ++i) {
+        if (isalpha(text[i])) {
+            char offset = isupper(text[i]) ? 'A' : 'a';
+            text[i] = (text[i] - offset + k) % 26 + offset;
+        }  
+    }
+}
+
+void decrypt(char *text, int k) {
+    for (int i = 0; text[i] != '\0'; ++i) {
+        if (isalpha(text[i])) {
+            char offset = isupper(text[i]) ? 'A' : 'a';
+            text[i] = (text[i] - offset - k + 26) % 26 + offset;
+        }
+    }
+}
+
+int main() {
+    char text[100];
+    int k;
+    int choice;
+
+    printf("Enter a string: ");
+    fgets(text, sizeof(text), stdin);
+
+    printf("Enter the shift value (1-25): ");
+    scanf("%d", &k);
+
+    if (k < 1 || k > 25) {
+        printf("Invalid shift value.\n");
+        return 1;
+    }
+
+    printf("Enter 1 to Encrypt or 2 to Decrypt: ");
+    scanf("%d", &choice);
+
+    if (choice == 1) {
+        encrypt(text, k);
+        printf("Encrypted text: %s\n", text);
+    } else if (choice == 2) {
+        decrypt(text, k);
+        printf("Decrypted text: %s\n", text);
+    } else {
+        printf("Invalid choice.\n");
+    }
+
+    return 0;
+}
+
+
+
+
+
+
+#input
+Enter a string: hello
+Enter the shift value (1-25): 3
+Enter 1 to Encrypt or 2 to Decrypt: 1
+  #output
+Encrypted text: khoor
