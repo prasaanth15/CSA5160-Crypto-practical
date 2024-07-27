@@ -1,0 +1,81 @@
+#include <stdio.h>
+#include <stdint.h>
+#include <string.h>
+
+#define KEY_SIZE 8    // DES key size in bytes
+#define SUBKEY_SIZE 6 // DES subkey size in bytes
+
+// Helper function to extract a 24-bit subset from a 28-bit segment
+uint32_t extract_24_bits(uint32_t segment, int start_bit) {
+    return (segment >> start_bit) & 0xFFFFFF;
+}
+
+// Generate the DES subkeys
+void generate_des_subkeys(const uint8_t key[KEY_SIZE], uint8_t subkeys[16][SUBKEY_SIZE]) {
+    uint32_t C[2] = {0}; // 28-bit segments
+    uint32_t D[2] = {0};
+
+    // Initialize C and D from the key (assuming the key is 64 bits)
+    for (int i = 0; i < 28; ++i) {
+        C[0] |= ((key[i / 8] >> (7 - (i % 8))) & 1) << (27 - i);
+        D[0] |= ((key[(i + 28) / 8] >> (7 - ((i + 28) % 8))) & 1) << (27 - i);
+    }
+
+    for (int round = 0; round < 16; ++round) {
+        uint32_t temp_C = (C[0] << 1) | ((C[0] >> 27) & 1); // Circular left shift
+        uint32_t temp_D = (D[0] << 1) | ((D[0] >> 27) & 1); // Circular left shift
+
+        C[0] = temp_C & 0xFFFFFFF; // 28-bit segment
+        D[0] = temp_D & 0xFFFFFFF; // 28-bit segment
+
+        // Extract 24 bits from C and D
+        uint32_t subkey = (extract_24_bits(C[0], 0) << 24) | extract_24_bits(D[0], 0);
+
+        // Store the subkey
+        memcpy(subkeys[round], &subkey, SUBKEY_SIZE);
+    }
+}
+
+void print_key(const uint8_t key[SUBKEY_SIZE]) {
+    for (int i = 0; i < SUBKEY_SIZE; ++i) {
+        printf("%02X", key[i]);
+    }
+    printf("\n");
+}
+
+int main() {
+    // Example DES key (64 bits)
+    uint8_t key[KEY_SIZE] = {0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF};
+    uint8_t subkeys[16][SUBKEY_SIZE];
+
+    // Generate DES subkeys
+    generate_des_subkeys(key, subkeys);
+
+    // Print the subkeys
+    for (int i = 0; i < 16; ++i) {
+        printf("Subkey %d: ", i + 1);
+        print_key(subkeys[i]);
+    }
+
+    return 0;
+}
+
+
+
+#OUTPUT
+Subkey 1: 9A5713AC9A57
+Subkey 2: 35AF265835AF
+Subkey 3: 6B5E4DB06B5E
+Subkey 4: D7BC9A60D7BC
+Subkey 5: AF7935C0AF79
+Subkey 6: 5EF36A805EF3
+Subkey 7: BCE6D500BCE6
+Subkey 8: 78CDAB0178CD
+Subkey 9: F19A5702F19A
+Subkey 10: E235AF04E235
+Subkey 11: C46B5E09C46B
+Subkey 12: 89D7BC1289D7
+Subkey 13: 13AF792413AF
+Subkey 14: 265EF348265E
+Subkey 15: 4DBCE6914DBC
+Subkey 16: 9A78CD239A78
