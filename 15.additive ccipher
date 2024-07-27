@@ -1,0 +1,59 @@
+#include <stdio.h>
+#include <string.h>
+
+#define ALPHABET_SIZE 26
+
+// Decrypts the ciphertext using Caesar cipher with a given shift
+void decrypt(const char *ciphertext, int shift, char *plaintext) {
+    for (int i = 0; ciphertext[i]; i++) {
+        char c = ciphertext[i];
+        plaintext[i] = (c >= 'A' && c <= 'Z') ? 'A' + (c - 'A' - shift + ALPHABET_SIZE) % ALPHABET_SIZE : c;
+    }
+    plaintext[strlen(ciphertext)] = '\0';
+}
+
+int main() {
+    char ciphertext[] = "XLIWMWXEPMWLI";  // Example ciphertext
+    char plaintext[100];
+    
+    // Decrypt and display each possible plaintext
+    for (int shift = 0; shift < ALPHABET_SIZE; shift++) {
+        decrypt(ciphertext, shift, plaintext);
+        printf("Shift %2d: %s\n", shift, plaintext);
+    }
+
+    return 0;
+}
+
+
+
+
+
+
+#output
+Shift  0: XLIWMWXEPMWLI
+Shift  1: WKHVLVWDOLVKH
+Shift  2: VJGUKUVCNKUJG
+Shift  3: UIFTJTUBMJTIF
+Shift  4: THESISTALISHE
+Shift  5: SGDRHRSZKHRGD
+Shift  6: RFCQGQRYJGQFC
+Shift  7: QEBPFPQXIFPEB
+Shift  8: PDAOEOPWHEODA
+Shift  9: OCZNDNOVGDNCZ
+Shift 10: NBYMCMNUFCMBY
+Shift 11: MAXLBLMTEBLAX
+Shift 12: LZWKAKLSDAKZW
+Shift 13: KYVJZJKRCZJYV
+Shift 14: JXUIYIJQBYIXU
+Shift 15: IWTHXHIPAXHWT
+Shift 16: HVSGWGHOZWGVS
+Shift 17: GURFVFGNYVFUR
+Shift 18: FTQEUEFMXUETQ
+Shift 19: ESPDTDELWTDSP
+Shift 20: DROCSCDKVSCRO
+Shift 21: CQNBRBCJURBQN
+Shift 22: BPMAQABITQAPM
+Shift 23: AOLZPZAHSPZOL
+Shift 24: ZNKYOYZGROYNK
+Shift 25: YMJXNXYFQNXMJ
