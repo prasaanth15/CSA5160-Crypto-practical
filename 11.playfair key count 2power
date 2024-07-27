@@ -1,0 +1,32 @@
+#include <stdio.h>
+#include <math.h>
+
+// Function to calculate the log base 2 of factorial
+double log2_factorial(int n) {
+    double log2_factorial = 0.0;
+    for (int i = 1; i <= n; ++i) {
+        log2_factorial += log2(i);
+    }
+    return log2_factorial;
+}
+
+int main() {
+    int n = 25;
+    
+    // Step 2: Calculate total possible keys
+    double total_log2_keys = log2_factorial(n);
+    printf("Total possible keys: 2^%.2f\n", total_log2_keys);
+
+    // Step 4: Calculate symmetries
+    double symmetries_log2 = 5 * log2(2) + 2 * log2_factorial(5);
+    double unique_log2_keys = total_log2_keys - symmetries_log2;
+    
+    // Step 5 and 6: Calculate effectively unique keys and convert to power of 2
+    printf("Effectively unique keys: 2^%.2f\n", unique_log2_keys);
+
+    return 0;
+}
+
+    #output
+    Total possible keys: 2^83.68
+Effectively unique keys: 2^64.87
