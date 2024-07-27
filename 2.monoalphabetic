@@ -1,0 +1,71 @@
+#include <stdio.h>
+#include <ctype.h>
+#include <string.h>
+
+void encrypt(char *text, char *key) {
+    for (int i = 0; text[i] != '\0'; ++i) {
+        if (isalpha(text[i])) {
+            char offset = isupper(text[i]) ? 'A' : 'a';
+            int index = text[i] - offset;
+            text[i] = isupper(text[i]) ? toupper(key[index]) : tolower(key[index]);
+        }
+    }
+}
+
+void decrypt(char *text, char *key) {
+    char reverseKey[26];
+    for (int i = 0; i < 26; ++i) {
+        reverseKey[key[i] - 'A'] = 'A' + i;
+    }
+
+    for (int i = 0; text[i] != '\0'; ++i) {
+        if (isalpha(text[i])) {
+            char offset = isupper(text[i]) ? 'A' : 'a';
+            int index = toupper(text[i]) - 'A';
+            text[i] = isupper(text[i]) ? reverseKey[index] : tolower(reverseKey[index]);
+        }
+    }
+}
+
+int main() {
+    char text[100];
+    char key[27];
+    int choice;
+
+    printf("Enter a 26-letter key (uppercase): ");
+    scanf("%s", key);
+    
+    if (strlen(key) != 26) {
+        printf("Invalid key length.\n");
+        return 1;
+    }
+
+    printf("Enter a string: ");
+    getchar(); 
+    fgets(text, sizeof(text), stdin);
+    text[strcspn(text, "\n")] = '\0'; 
+
+    printf("Enter 1 to Encrypt or 2 to Decrypt: ");
+    scanf("%d", &choice);
+
+    if (choice == 1) {
+        encrypt(text, key);
+        printf("Encrypted text: %s\n", text);
+    } else if (choice == 2) {
+        decrypt(text, key);
+        printf("Decrypted text: %s\n", text);
+    } else {
+        printf("Invalid choice.\n");
+    }
+
+    return 0;
+}
+
+
+
+  #input
+Enter a 26-letter key (uppercase): QWERTYUIOPASDFGHJKLZXCVBNM
+Enter a string: HELLO
+Enter 1 to Encrypt or 2 to Decrypt: 1
+#Output
+Encrypted text: ITSSG
