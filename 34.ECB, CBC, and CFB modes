@@ -1,0 +1,76 @@
+#include <stdio.h>
+#include <string.h>
+#include <stdint.h>
+
+#define BLOCK_SIZE 8
+
+void xor_blocks(uint8_t *a, uint8_t *b, uint8_t *result) {
+    for (int i = 0; i < BLOCK_SIZE; i++) result[i] = a[i] ^ b[i];
+}
+
+void encrypt_block(uint8_t *input, uint8_t *key, uint8_t *output) {
+    xor_blocks(input, key, output); // Simplified encryption
+}
+
+void pad_data(uint8_t *data, size_t data_len, size_t padded_len, uint8_t *padded_data) {
+    memcpy(padded_data, data, data_len);
+    padded_data[data_len] = 0x80; // Append 1 bit
+    memset(padded_data + data_len + 1, 0, padded_len - data_len - 1); // Append 0 bits
+}
+
+void ecb_mode(uint8_t *plaintext, size_t len, uint8_t *key, uint8_t *ciphertext) {
+    uint8_t padded_plaintext[len + BLOCK_SIZE];
+    size_t padded_len = ((len / BLOCK_SIZE) + 1) * BLOCK_SIZE;
+    pad_data(plaintext, len, padded_len, padded_plaintext);
+    for (size_t i = 0; i < padded_len; i += BLOCK_SIZE) encrypt_block(padded_plaintext + i, key, ciphertext + i);
+}
+
+void cbc_mode(uint8_t *plaintext, size_t len, uint8_t *key, uint8_t *iv, uint8_t *ciphertext) {
+    uint8_t padded_plaintext[len + BLOCK_SIZE], block[BLOCK_SIZE];
+    size_t padded_len = ((len / BLOCK_SIZE) + 1) * BLOCK_SIZE;
+    pad_data(plaintext, len, padded_len, padded_plaintext);
+    memcpy(block, iv, BLOCK_SIZE);
+    for (size_t i = 0; i < padded_len; i += BLOCK_SIZE) {
+        xor_blocks(padded_plaintext + i, block, block);
+        encrypt_block(block, key, ciphertext + i);
+        memcpy(block, ciphertext + i, BLOCK_SIZE);
+    }
+}
+
+void cfb_mode(uint8_t *plaintext, size_t len, uint8_t *key, uint8_t *iv, uint8_t *ciphertext) {
+    uint8_t block[BLOCK_SIZE];
+    memcpy(block, iv, BLOCK_SIZE);
+    for (size_t i = 0; i < len; i += BLOCK_SIZE) {
+        encrypt_block(block, key, block);
+        xor_blocks(plaintext + i, block, ciphertext + i);
+        memcpy(block, ciphertext + i, BLOCK_SIZE);
+    }
+}
+
+int main() {
+    uint8_t key[BLOCK_SIZE] = {0x13, 0x34, 0x57, 0x79, 0x9B, 0xBC, 0xDF, 0xF1};
+    uint8_t iv[BLOCK_SIZE] = {0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF};
+    uint8_t plaintext[] = "Hello, World!";
+    size_t len = strlen((char *)plaintext);
+
+    uint8_t ciphertext_ecb[len + BLOCK_SIZE], ciphertext_cbc[len + BLOCK_SIZE], ciphertext_cfb[len + BLOCK_SIZE];
+
+    ecb_mode(plaintext, len, key, ciphertext_ecb);
+    cbc_mode(plaintext, len, key, iv, ciphertext_cbc);
+    cfb_mode(plaintext, len, key, iv, ciphertext_cfb);
+
+    printf("ECB Ciphertext: ");
+    for (size_t i = 0; i < len + BLOCK_SIZE; i++) printf("%02X ", ciphertext_ecb[i]);
+    printf("\nCBC Ciphertext: ");
+    for (size_t i = 0; i < len + BLOCK_SIZE; i++) printf("%02X ", ciphertext_cbc[i]);
+    printf("\nCFB Ciphertext: ");
+    for (size_t i = 0; i < len + BLOCK_SIZE; i++) printf("%02X ", ciphertext_cfb[i]);
+    printf("\n");
+
+    return 0;
+}
+
+#output
+ECB Ciphertext: 5B 51 3B 15 F4 90 FF A6 7C 46 3B 1D BA 3C DF F1 58 03 BE 00 00
+CBC Ciphertext: 5A 72 7E 72 7D 3B 32 49 26 34 45 6F C7 07 ED B8 00 00 BE 00 00
+CFB Ciphertext: 5A 72 7E 72 7D 3B 32 49 26 34 45 6F C7 87 ED B8 05 00 00 00 00
