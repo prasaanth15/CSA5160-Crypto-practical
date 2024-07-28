@@ -1,0 +1,68 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+typedef struct {
+    unsigned long long p, q, g, x, y;
+} DSAKey;
+
+typedef struct {
+    unsigned long long r, s;
+} DSASignature;
+
+typedef struct {
+    unsigned long long n, e, d;
+} RSAKey;
+
+typedef struct {
+    unsigned char *data;
+    size_t length;
+} Message;
+
+unsigned long long mod_exp(unsigned long long base, unsigned long long exponent, unsigned long long modulus) {
+    unsigned long long result = 1;
+    base %= modulus;
+    while (exponent > 0) {
+        if (exponent % 2 == 1) result = (result * base) % modulus;
+        exponent >>= 1;
+        base = (base * base) % modulus;
+    }
+    return result;
+}
+
+void generate_dsa_key(DSAKey *key) { /* Key generation logic */ }
+
+void generate_rsa_key(RSAKey *key) { /* Key generation logic */ }
+
+DSASignature *generate_dsa_signature(const Message *message, const DSAKey *key) {
+    DSASignature *signature = (DSASignature *)malloc(sizeof(DSASignature));
+    /* Signature generation logic */
+    return signature;
+}
+
+unsigned long long generate_rsa_signature(const Message *message, const RSAKey *key) {
+    /* Signature generation logic */
+    return 0;
+}
+
+int main() {
+    Message message = { (unsigned char *)"Hello, DSA and RSA!", strlen("Hello, DSA and RSA!") };
+    DSAKey dsaKey;
+    generate_dsa_key(&dsaKey);
+    DSASignature *dsaSignature = generate_dsa_signature(&message, &dsaKey);
+    printf("DSA Signature:\nr: %llu\ns: %llu\n", dsaSignature->r, dsaSignature->s);
+    
+    RSAKey rsaKey;
+    generate_rsa_key(&rsaKey);
+    unsigned long long rsaSignature = generate_rsa_signature(&message, &rsaKey);
+    printf("RSA Signature: %llu\n", rsaSignature);
+    
+    free(dsaSignature);
+    return 0;
+}
+
+#OUTPUT
+DSA Signature:
+r: 12606432
+s: 12583248
+RSA Signature: 0
