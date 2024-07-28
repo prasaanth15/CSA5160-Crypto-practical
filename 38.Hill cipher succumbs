@@ -1,0 +1,110 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+#define SIZE 3
+#define MOD 26
+
+// Function to find the modular inverse of a number
+int mod_inverse(int a, int m) {
+    a = a % m;
+    for (int x = 1; x < m; x++) {
+        if ((a * x) % m == 1) return x;
+    }
+    return -1;
+}
+
+// Function to find the determinant of a 3x3 matrix
+int determinant(int matrix[SIZE][SIZE]) {
+    return matrix[0][0] * (matrix[1][1] * matrix[2][2] - matrix[2][1] * matrix[1][2])
+         - matrix[0][1] * (matrix[1][0] * matrix[2][2] - matrix[2][0] * matrix[1][2])
+         + matrix[0][2] * (matrix[1][0] * matrix[2][1] - matrix[2][0] * matrix[1][1]);
+}
+
+// Function to find the inverse of a 3x3 matrix modulo 26
+void inverse(int matrix[SIZE][SIZE], int inv[SIZE][SIZE]) {
+    int det = determinant(matrix) % MOD;
+    int invDet = mod_inverse(det, MOD);
+    int adj[SIZE][SIZE] = {
+        {(matrix[1][1] * matrix[2][2] - matrix[2][1] * matrix[1][2]) % MOD, (matrix[0][2] * matrix[2][1] - matrix[0][1] * matrix[2][2]) % MOD, (matrix[0][1] * matrix[1][2] - matrix[0][2] * matrix[1][1]) % MOD},
+        {(matrix[1][2] * matrix[2][0] - matrix[1][0] * matrix[2][2]) % MOD, (matrix[0][0] * matrix[2][2] - matrix[0][2] * matrix[2][0]) % MOD, (matrix[1][0] * matrix[0][2] - matrix[0][0] * matrix[1][2]) % MOD},
+        {(matrix[1][0] * matrix[2][1] - matrix[2][0] * matrix[1][1]) % MOD, (matrix[2][0] * matrix[0][1] - matrix[0][0] * matrix[2][1]) % MOD, (matrix[0][0] * matrix[1][1] - matrix[1][0] * matrix[0][1]) % MOD}
+    };
+    for (int i = 0; i < SIZE; i++) {
+        for (int j = 0; j < SIZE; j++) {
+            inv[i][j] = (adj[i][j] * invDet) % MOD;
+            if (inv[i][j] < 0) inv[i][j] += MOD;
+        }
+    }
+}
+
+// Function to multiply matrices
+void multiply_matrices(int a[SIZE][SIZE], int b[SIZE], int result[SIZE]) {
+    for (int i = 0; i < SIZE; i++) {
+        result[i] = 0;
+        for (int j = 0; j < SIZE; j++) {
+            result[i] += a[i][j] * b[j];
+        }
+        result[i] %= MOD;
+    }
+}
+
+// Function to perform a known plaintext attack to find the key matrix
+void known_plaintext_attack(int plaintexts[SIZE][SIZE], int ciphertexts[SIZE][SIZE], int key[SIZE][SIZE]) {
+    int invPlaintext[SIZE][SIZE];
+    inverse(plaintexts, invPlaintext);
+    for (int i = 0; i < SIZE; i++) {
+        multiply_matrices(invPlaintext, ciphertexts[i], key[i]);
+    }
+}
+
+// Function to encrypt plaintext using the Hill cipher
+void hill_encrypt(int key[SIZE][SIZE], int plaintext[SIZE], int ciphertext[SIZE]) {
+    multiply_matrices(key, plaintext, ciphertext);
+}
+
+// Function to decrypt ciphertext using the Hill cipher
+void hill_decrypt(int key[SIZE][SIZE], int ciphertext[SIZE], int plaintext[SIZE]) {
+    int invKey[SIZE][SIZE];
+    inverse(key, invKey);
+    multiply_matrices(invKey, ciphertext, plaintext);
+}
+
+int main() {
+    int plaintexts[SIZE][SIZE] = {{7, 8, 11}, {11, 4, 14}, {3, 13, 2}};
+    int ciphertexts[SIZE][SIZE] = {{10, 22, 6}, {5, 17, 11}, {19, 3, 8}};
+    int key[SIZE][SIZE];
+
+    known_plaintext_attack(plaintexts, ciphertexts, key);
+
+    printf("Recovered key matrix:\n");
+    for (int i = 0; i < SIZE; i++) {
+        for (int j = 0; j < SIZE; j++) {
+            printf("%d ", key[i][j]);
+        }
+        printf("\n");
+    }
+
+    int plaintext[SIZE] = {7, 8, 11};
+    int ciphertext[SIZE];
+    int decrypted[SIZE];
+
+    hill_encrypt(key, plaintext, ciphertext);
+    printf("Ciphertext: ");
+    for (int i = 0; i < SIZE; i++) printf("%d ", ciphertext[i]);
+    printf("\n");
+
+    hill_decrypt(key, ciphertext, decrypted);
+    printf("Decrypted text: ");
+    for (int i = 0; i < SIZE; i++) printf("%d ", decrypted[i]);
+    printf("\n");
+
+    return 0;
+}
+
+#output
+Recovered key matrix:
+14 4 8
+21 18 0
+17 13 24
+Ciphertext: 10 5 19
+Decrypted text: 14 16 22
