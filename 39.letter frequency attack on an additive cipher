@@ -1,0 +1,103 @@
+#include <stdio.h>
+#include <string.h>
+
+#define ALPHABET_SIZE 26
+#define MAX_TEXT_SIZE 1024
+
+// English letter frequency (approximate percentages)
+float englishFrequencies[ALPHABET_SIZE] = {
+    8.167, 1.492, 2.782, 4.253, 12.702, 2.228, 2.015, 6.094, 6.966, 0.153,
+    0.772, 4.025, 2.406, 6.749, 7.507, 1.929, 0.095, 5.987, 6.327, 9.056,
+    2.758, 0.978, 2.360, 0.150, 1.974, 0.074
+};
+
+float chi_squared(char *text, int length) {
+    int letterCounts[ALPHABET_SIZE] = {0};
+    float chi2 = 0.0;
+
+    for (int i = 0; i < length; i++) {
+        if (text[i] >= 'A' && text[i] <= 'Z') letterCounts[text[i] - 'A']++;
+        else if (text[i] >= 'a' && text[i] <= 'z') letterCounts[text[i] - 'a']++;
+    }
+
+    for (int i = 0; i < ALPHABET_SIZE; i++) {
+        float expected = length * (englishFrequencies[i] / 100);
+        float diff = letterCounts[i] - expected;
+        chi2 += diff * diff / expected;
+    }
+
+    return chi2;
+}
+
+void decrypt(char *ciphertext, char *plaintext, int key) {
+    int length = strlen(ciphertext);
+    for (int i = 0; i < length; i++) {
+        if (ciphertext[i] >= 'A' && ciphertext[i] <= 'Z')
+            plaintext[i] = ((ciphertext[i] - 'A' - key + ALPHABET_SIZE) % ALPHABET_SIZE) + 'A';
+        else if (ciphertext[i] >= 'a' && ciphertext[i] <= 'z')
+            plaintext[i] = ((ciphertext[i] - 'a' - key + ALPHABET_SIZE) % ALPHABET_SIZE) + 'a';
+        else
+            plaintext[i] = ciphertext[i];
+    }
+    plaintext[length] = '\0';
+}
+
+void frequency_attack(char *ciphertext, int topN) {
+    int length = strlen(ciphertext);
+    float chi2_values[ALPHABET_SIZE];
+    char plaintexts[ALPHABET_SIZE][MAX_TEXT_SIZE];
+
+    for (int key = 0; key < ALPHABET_SIZE; key++) {
+        decrypt(ciphertext, plaintexts[key], key);
+        chi2_values[key] = chi_squared(plaintexts[key], length);
+    }
+
+    for (int i = 0; i < ALPHABET_SIZE - 1; i++) {
+        for (int j = i + 1; j < ALPHABET_SIZE; j++) {
+            if (chi2_values[i] > chi2_values[j]) {
+                float temp = chi2_values[i];
+                chi2_values[i] = chi2_values[j];
+                chi2_values[j] = temp;
+
+                char tempText[MAX_TEXT_SIZE];
+                strcpy(tempText, plaintexts[i]);
+                strcpy(plaintexts[i], plaintexts[j]);
+                strcpy(plaintexts[j], tempText);
+            }
+        }
+    }
+
+    for (int i = 0; i < topN && i < ALPHABET_SIZE; i++) {
+        printf("%d: %s (Chi-squared: %f)\n", i + 1, plaintexts[i], chi2_values[i]);
+    }
+}
+
+int main() {
+    char ciphertext[MAX_TEXT_SIZE];
+    int topN;
+
+    printf("Enter the ciphertext: ");
+    fgets(ciphertext, MAX_TEXT_SIZE, stdin);
+    ciphertext[strcspn(ciphertext, "\n")] = '\0';
+
+    printf("Enter the number of top possible plaintexts to display: ");
+    scanf("%d", &topN);
+
+    frequency_attack(ciphertext, topN);
+
+    return 0;
+}
+
+#output
+Enter the ciphertext: helloworld
+Enter the number of top possible plaintexts to display: 10
+1: ebiiltloia (Chi-squared: 24.008144)
+2: wtaadldgas (Chi-squared: 24.794292)
+3: helloworld (Chi-squared: 28.375601)
+4: lippsasvph (Chi-squared: 59.988674)
+5: yvccfnficu (Chi-squared: 62.137928)
+6: olssvdvysk (Chi-squared: 69.311516)
+7: axeehphkew (Chi-squared: 93.915024)
+8: rovvygybvn (Chi-squared: 118.437126)
+9: ifmmpxpsme (Chi-squared: 123.100861)
+10: xubbemehbt (Chi-squared: 130.664703)
